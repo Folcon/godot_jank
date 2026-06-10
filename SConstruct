@@ -1,5 +1,13 @@
 #!/usr/bin/env python
-import os, glob, subprocess
+import os, glob, subprocess, sys
+
+# jank's headers require Clang: they use Clang builtins and member-named-as-type idioms
+#   that GCC rejects (e.g. -Wchanges-meaning on `kind kind{}`)
+# godot-cpp defaults to GCC on Linux, so force its LLVM/Clang toolchain there before it configures
+# macOS and Windows already use Clang (Requires clang/clang++ on PATH)
+_platform = ARGUMENTS.get("platform") or ("linux" if sys.platform.startswith("linux") else "")
+if _platform == "linux":
+    ARGUMENTS.setdefault("use_llvm", "yes")
 
 # godot-cpp from the submodule (gives CPPPATH, per-platform flags + suffix logic).
 env = SConscript("godot-cpp/SConstruct")

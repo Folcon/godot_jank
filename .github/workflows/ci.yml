@@ -34,6 +34,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y curl gnupg
+          # jank's headers require Clang, so the extension is built with use_llvm=yes (see SConstruct).
+          sudo apt-get install -y clang
           curl -s "https://ppa.jank-lang.org/KEY.gpg" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/jank.gpg >/dev/null
           sudo curl -s -o /etc/apt/sources.list.d/jank.list "https://ppa.jank-lang.org/jank.list"
           sudo apt-get update

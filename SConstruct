@@ -54,8 +54,12 @@ if platform in ("macos", "linux"):
         #   dylibs when copied beside the .dylib (the absolute rpath above is dev-only)
         env.Append(LINKFLAGS=["-Wl,-rpath,@loader_path"])
     else:  # linux: -lcrypto / -lunwind resolve against system libs
-        # $ORIGIN makes an exported game find jank's .so's next to the extension
-        env.Append(LINKFLAGS=["-Wl,-rpath,$$ORIGIN"])
+        # $ORIGIN makes an exported game find jank's .so's next to the extension --gc-keep-exported
+        #   godot-cpp links with --gc-sections, which otherwise garbage collects our GDE_EXPORT'd
+        #   class vtables (e.g. _ZTVN5godot8JankNodeE) even though they're exported, so Godot's
+        #   dlopen fails "undefined symbol", this retains them
+        #   (Needs GDE_EXPORT on the classes to mark the vtables exported in the first place)
+        env.Append(LINKFLAGS=["-Wl,-rpath,$$ORIGIN", "-Wl,--gc-keep-exported"])
 
 elif platform == "windows":
     # /!\ UNVALIDATED. jank's Windows support is immature and embedding its JIT in

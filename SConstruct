@@ -69,5 +69,11 @@ else:
 # your installed jank (e.g. don't `arch=x86_64` against an arm64 jank).
 
 libname = "libgodot_jank{}{}".format(env["suffix"], env["SHLIBSUFFIX"])
+# Canonical build output is the distributable addon at addons/godot_jank/bin/
 lib = env.SharedLibrary("addons/godot_jank/bin/" + libname, source=Glob("src/*.cpp"))
 Default(lib)
+
+# Mirror the built lib into the demo project so `scons` alone makes the demo runnable:
+#   the demo's .gdextension loads res://addons/godot_jank/bin/ (i.e. demo/addons/...)
+demo_lib = env.Install("demo/addons/godot_jank/bin", lib)
+Default(demo_lib)

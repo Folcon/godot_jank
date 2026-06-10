@@ -40,8 +40,16 @@ if platform in ("macos", "linux"):
     # clang/gcc: jank reports errors by throwing, and its headers use C++20 concepts.
     env.Append(CXXFLAGS=["-fexceptions", "-std=c++20"])
     env.Append(LIBPATH=[JANK + "/lib"])
+    # jank's static runtime. On Linux, GNU ld (building -shared) won't pull the AOT
+    #   module-load object files (clojure.core + the nREPL handlers, referenced only by
+    #   address) out of the archive, so force the whole archive in
+    #   MacOS's ld64 extracts them on demand (and uses different syntax), so it links the .a plainly
+    jank_a = JANK + "/lib/libjank-standalone.a"
+    if platform == "linux":
+        env.Append(LINKFLAGS=["-Wl,--whole-archive", jank_a, "-Wl,--no-whole-archive"])
+    else:
+        env.Append(LINKFLAGS=[jank_a])
     env.Append(LINKFLAGS=[
-        JANK + "/lib/libjank-standalone.a",
         "-lclang-cpp", "-lLLVM", "-lunwind", "-lz", "-lcrypto",
         "-Wl,-rpath," + JANK + "/lib",   # find jank's shared libs at runtime
     ])

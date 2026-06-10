@@ -1,0 +1,19 @@
+[gd_scene load_steps=1 format=3]
+
+[node name="Main" type="Node2D"]
+
+[node name="MoverA" type="JankNode" parent="."]
+jank_ns = "mover-a"
+jank_script = "res://mover_a.jank"
+
+[node name="BoxA" type="Polygon2D" parent="MoverA"]
+polygon = PackedVector2Array(0, 0, 64, 0, 64, 64, 0, 64)
+color = Color(1, 0.45, 0.2, 1)
+
+[node name="MoverB" type="JankNode" parent="."]
+jank_ns = "mover-b"
+jank_script = "res://mover_b.jank"
+
+[node name="BoxB" type="Polygon2D" parent="MoverB"]
+polygon = PackedVector2Array(0, 0, 48, 0, 48, 48, 0, 48)
+color = Color(0.3, 0.7, 1, 1)

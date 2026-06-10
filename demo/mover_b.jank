@@ -1,0 +1,11 @@
+;; ns mover-b with two SYNCHRONOUS read-modify-writes: a vertical bounce (read y, flip
+;;   velocity at the bounds, write y) and a spin (read rotation, add, write)
+(def vy (atom 3.0))
+
+(defn ready [self] (godot/set-position self 360 200))
+
+(defn process [self delta]
+  (let [y (godot/get-y self "position")]
+    (when (or (> y 440.0) (< y 120.0)) (swap! vy -))
+    (godot/set-position self 360 (+ y @vy)))
+  (godot/set-rotation self (+ (godot/get-num self "rotation") 0.04)))

@@ -1,0 +1,12 @@
+# build artifacts
+*.os
+*.o
+*.obj
+.sconsign.dblite
+demo/addons/godot_jank/bin/*.dylib
+demo/addons/godot_jank/bin/*.so
+demo/addons/godot_jank/bin/*.dll
+
+# godot
+demo/.godot/
+.DS_Store

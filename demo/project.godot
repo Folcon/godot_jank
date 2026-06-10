@@ -1,0 +1,27 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="godot-jank-demo"
+run/main_scene="res://main.tscn"
+config/features=PackedStringArray("4.6")
+
+[autoload]
+
+JankRuntime="*res://addons/godot_jank/jank_runtime.tscn"
+
+[dotnet]
+
+project/assembly_name="godot-jank-demo"
+
+[jank]
+
+socket_repl_port=5678

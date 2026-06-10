@@ -1,0 +1,78 @@
+name: build-test
+on: [push, pull_request, workflow_dispatch]
+
+env:
+  GODOT_VER: "4.6.3-stable"   # extension is built against (v4.6.3)
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-14,       gd: macos,   arch: arm64,  godot_dl: macos.universal }
+          - { os: ubuntu-24.04,  gd: linux,   arch: x86_64, godot_dl: linux.x86_64 }
+          - { os: windows-latest, gd: windows, arch: x86_64, godot_dl: win64.exe, experimental: true }
+    runs-on: ${{ matrix.os }}
+    defaults: { run: { shell: bash } }   # bash on all three (Git Bash on Windows) so greps work
+    continue-on-error: ${{ matrix.experimental == true }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { submodules: recursive }   # godot-cpp
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.x' }
+      - run: pip install scons
+
+      ### FILL IN — install jank, then export JANK_HOME ###
+      - name: Install jank (macOS)
+        if: matrix.gd == 'macos'
+        run: |
+          brew install jank-lang/jank/jank
+          jank check-health   # verifies install + pre-builds the PCH for the smoke test
+      - name: Install jank (Linux)
+        if: matrix.gd == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl gnupg
+          curl -s "https://ppa.jank-lang.org/KEY.gpg" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/jank.gpg >/dev/null
+          sudo curl -s -o /etc/apt/sources.list.d/jank.list "https://ppa.jank-lang.org/jank.list"
+          sudo apt-get update
+          sudo apt-get install -y jank
+          # SConstruct/resolver expect <JANK_HOME>/bin/jank + <JANK_HOME>/lib/jank/<ver>.
+          # apt installs into /usr, so derive it from the binary's location:
+          echo "JANK_HOME=$(dirname "$(dirname "$(command -v jank)")")" >> "$GITHUB_ENV"
+          jank check-health   # verifies install + pre-builds the PCH for the smoke test
+      - name: Install jank (Windows)
+        if: matrix.gd == 'windows'
+        run: |
+          # TODO: download an ikappaki/jank-win build, unzip, then:
+          # echo "JANK_HOME=$GITHUB_WORKSPACE/jank-win" >> "$GITHUB_ENV"
+          echo "::error::windows jank acquisition not wired yet"
+          exit 1
+
+      - name: Build extension
+        run: scons platform=${{ matrix.gd }} arch=${{ matrix.arch }} target=template_debug
+
+      - name: Download Godot ${{ env.GODOT_VER }} (headless)
+        run: |
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VER}"
+          curl -L -o godot.zip "$base/Godot_v${GODOT_VER}_${{ matrix.godot_dl }}.zip"
+          unzip -o godot.zip -d godot-bin
+          GODOT="$(find godot-bin -type f -name 'Godot*' | head -1)"
+          chmod +x "$GODOT" || true
+          echo "GODOT=$GODOT" >> "$GITHUB_ENV"
+
+      - name: Headless smoke test
+        run: |
+          "$GODOT" --headless --path demo --quit-after 240 2>&1 | tee run.log
+          grep -q "jank: runtime up" run.log
+          grep -q "JankNode loaded res://mover_a.jank" run.log
+          grep -q "JankNode loaded res://mover_b.jank" run.log
+          grep -q "clean shutdown" run.log
+          # fail if any crash/lex marker shows up
+          ! grep -Eq "ASTReader|lex/invalid-unicode|abort|Segmentation" run.log
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: godot-jank-${{ matrix.gd }}-${{ matrix.arch }}
+          path: demo/addons/godot_jank/bin/

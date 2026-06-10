@@ -1,0 +1,11 @@
+[configuration]
+entry_symbol = "godot_jank_init"
+compatibility_minimum = "4.6"
+
+[libraries]
+macos.debug = "res://addons/godot_jank/bin/libgodot_jank.macos.template_debug.arm64.dylib"
+macos.release = "res://addons/godot_jank/bin/libgodot_jank.macos.template_debug.arm64.dylib"
+linux.debug = "res://addons/godot_jank/bin/libgodot_jank.linux.template_debug.x86_64.so"
+linux.release = "res://addons/godot_jank/bin/libgodot_jank.linux.template_release.x86_64.so"
+windows.debug = "res://addons/godot_jank/bin/libgodot_jank.windows.template_debug.x86_64.dll"
+windows.release = "res://addons/godot_jank/bin/libgodot_jank.windows.template_release.x86_64.dll"

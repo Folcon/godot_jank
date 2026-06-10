@@ -1,5 +1,6 @@
 #pragma once
 #include <godot_cpp/classes/node.hpp>
+#include <godot_cpp/core/defs.hpp>   // GDE_EXPORT
 
 namespace godot {
 
@@ -7,7 +8,7 @@ namespace godot {
 //   (project setting jank/main), and opt-in (jank/repl_enabled, default on), starts the nREPL
 // Not required: a JankNode boots the VM lazily on its own
 // Add JankRuntime when you want nREPL and to configure the boot or no hitch when JankNode first loads
-class JankRuntime : public Node {
+class GDE_EXPORT JankRuntime : public Node {  // GDE_EXPORT: export the vtable/typeinfo so Godot's dlopen resolves them on Linux
   GDCLASS(JankRuntime, Node)
 
 protected:

@@ -1,5 +1,6 @@
 #pragma once
 #include <godot_cpp/classes/node2d.hpp>
+#include <godot_cpp/core/defs.hpp>   // GDE_EXPORT
 #include <string>
 
 namespace godot {
@@ -9,7 +10,7 @@ namespace godot {
 // `self` (this node) is passed to jank as an i64; the node is driven imperatively from jank via
 //   the godot/* bridge helpers (e.g. (godot/set-position self x y))
 // Boots the VM lazily on first use, no JankRuntime autoload required, however add it to remove the hitch on first load
-class JankNode : public Node2D {
+class GDE_EXPORT JankNode : public Node2D {  // GDE_EXPORT: export the vtable/typeinfo so Godot's dlopen resolves them on Linux
   GDCLASS(JankNode, Node2D)
 
 protected:

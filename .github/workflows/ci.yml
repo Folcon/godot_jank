@@ -65,6 +65,14 @@ jobs:
           chmod +x "$GODOT" || true
           echo "GODOT=$GODOT" >> "$GITHUB_ENV"
 
+      - name: Import project (register the GDExtension)
+        run: |
+          # GDExtensions load from .godot/extension_list.cfg, which a fresh checkout lacks
+          # An import pass generates it, the pass may abort on quit (jank boots in-editor) -
+          #   that's fine, the cfg is written first, so tolerate it and assert the file exists
+          "$GODOT" --headless --import --path demo || true
+          test -f demo/.godot/extension_list.cfg
+
       - name: Headless smoke test
         run: |
           "$GODOT" --headless --path demo --quit-after 240 2>&1 | tee run.log

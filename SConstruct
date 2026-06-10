@@ -41,8 +41,8 @@ if platform in ("macos", "linux"):
         # Also search next to the extension binary, so an exported game finds jank's
         #   dylibs when copied beside the .dylib (the absolute rpath above is dev-only)
         env.Append(LINKFLAGS=["-Wl,-rpath,@loader_path"])
-  else:  # linux: -lcrypto / -lunwind resolve against system libs
-      env.Append(LINKFLAGS=["-Wl,-rpath,$$ORIGIN", "-Wl,-z,origin"])
+    else:  # linux: -lcrypto / -lunwind resolve against system libs
+        env.Append(LINKFLAGS=["-Wl,-rpath,$$ORIGIN", "-Wl,-z,origin"])
 
 elif platform == "windows":
     # /!\ UNVALIDATED. jank's Windows support is immature and embedding its JIT in

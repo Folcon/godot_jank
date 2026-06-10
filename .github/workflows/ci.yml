@@ -10,8 +10,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: macos-14,       gd: macos,   arch: arm64,  godot_dl: macos.universal }
-          - { os: ubuntu-24.04,  gd: linux,   arch: x86_64, godot_dl: linux.x86_64 }
+          - { os: macos-26,       gd: macos,   arch: arm64,  godot_dl: macos.universal }
+          - { os: ubuntu-24.04,   gd: linux,   arch: x86_64, godot_dl: linux.x86_64 }
           - { os: windows-latest, gd: windows, arch: x86_64, godot_dl: win64.exe, experimental: true }
     runs-on: ${{ matrix.os }}
     defaults: { run: { shell: bash } }   # bash on all three (Git Bash on Windows) so greps work

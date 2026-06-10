@@ -8,6 +8,10 @@ import os, glob, subprocess, sys
 _platform = ARGUMENTS.get("platform") or ("linux" if sys.platform.startswith("linux") else "")
 if _platform == "linux":
     ARGUMENTS.setdefault("use_llvm", "yes")
+    # Linux hides symbols by default, which drops the extension classes' vtables
+    #   (_ZTVN5godot8JankNodeE) so Godot's dlopen fails with "undefined symbol"
+    # MacOS's linker keeps them, on Linux we must export them (godot-cpp #1480)
+    ARGUMENTS.setdefault("symbols_visibility", "visible")
 
 # godot-cpp from the submodule (gives CPPPATH, per-platform flags + suffix logic).
 env = SConscript("godot-cpp/SConstruct")

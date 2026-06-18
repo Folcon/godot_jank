@@ -85,7 +85,7 @@ extern "C" {
 }
 
 // No-op module loader for `godot`: the bridge ns is loaded eagerly in setup_godot_ns,
-//   so this never actually runs — it just gives jank_module_register a valid load-fn so
+//   so this never actually runs - it just gives jank_module_register a valid load-fn so
 //   that (require 'godot) in user scripts short-circuits as already-loaded.
 extern "C" void jank_load_godot_noop() {}
 
@@ -236,7 +236,7 @@ bool init_runtime() {
   if (home.empty()) {
     UtilityFunctions::printerr(
         "jank: could not locate a jank install. Install it (brew install jank) or "
-        "set JANK_HOME / the `jank/jank_home` project setting.");
+        "set JANK_HOME / the `jank/jank_home` project setting");
     return false;
   }
   fs::path jbin{ fs::path(home) / "bin" /
@@ -301,7 +301,7 @@ bool init_runtime() {
   jank_module_set_loaded("clojure.core");
 
   UtilityFunctions::print("jank: runtime up on the MAIN thread (home=",
-                          String(home.c_str()), ").");
+                          String(home.c_str()), ")");
   return true;
 }
 
@@ -322,13 +322,13 @@ void safe_eval(std::string const &code, char const *ctx) {
   try {
     jank_eval(jank_read_string_c(code.c_str()));
   } catch (jank::error_ref const &e) {
-    UtilityFunctions::printerr("jank: ", ctx, " — [",
+    UtilityFunctions::printerr("jank: ", ctx, " - [",
                                jank::error::kind_str(e->kind), "] ",
                                String(jtl::immutable_string(e->message).c_str()),
                                "  (form ignored)");
   } catch (...) {
     UtilityFunctions::printerr("jank: ", ctx,
-                               " — non-jank error; form ignored: ",
+                               " - non-jank error; form ignored: ",
                                String(code.substr(0, 120).c_str()));
   }
 }
@@ -378,14 +378,14 @@ void setup_godot_ns() {
       std::string const body{ f->get_as_text().utf8().get_data() };
       jank_eval(jank_read_string_c(("(do\n" + body + "\n)").c_str()));
     } else {
-      UtilityFunctions::printerr("jank: res://godot.jank not found - bridge helpers missing.");
+      UtilityFunctions::printerr("jank: res://godot.jank not found - bridge helpers missing");
     }
   }
   // Mark `godot` as a loaded module so user scripts can (:require [godot]), a satisfied
   //   no-op at runtime that gives the IDE a real namespace to resolve godot/* against
   jank_module_register("godot", &jank_load_godot_noop);
   jank_module_set_loaded("godot");
-  UtilityFunctions::print("jank: godot bridge ns ready (loaded res://godot.jank).");
+  UtilityFunctions::print("jank: godot bridge ns ready (loaded res://godot.jank)");
 }
 
 // Boot the VM once, on the main thread
@@ -393,7 +393,7 @@ void setup_godot_ns() {
 bool ensure_vm() {
   if (g_vm_ready.load()) { return true; }
   if (!is_main_thread() && g_main_id != std::thread::id{}) {
-    UtilityFunctions::printerr("jank: ensure_vm called off the main thread; ignored.");
+    UtilityFunctions::printerr("jank: ensure_vm called off the main thread; ignored");
     return false;
   }
   g_main_id = std::this_thread::get_id();
@@ -413,7 +413,7 @@ void load_script_into_ns(std::string const &ns, std::string const &body) {
       jank_eval(jank_read_string_c("(clojure.core/defn ready [self] nil)"));
       jank_eval(jank_read_string_c("(clojure.core/defn process [self delta] nil)"));
     } catch (...) {
-      UtilityFunctions::printerr("jank: ns '", String(ns.c_str()), "' setup failed.");
+      UtilityFunctions::printerr("jank: ns '", String(ns.c_str()), "' setup failed");
       return;
     }
     safe_eval("(do\n" + body + "\n)", "jank-node script");
@@ -434,15 +434,15 @@ void call_node_fn(std::string const &ns, char const *fn, int64_t self,
         jank_call1(f, s);
       }
     } catch (jank::error_ref const &e) {
-      UtilityFunctions::printerr("jank: (", String(ns.c_str()), "/", fn, " self) — [",
+      UtilityFunctions::printerr("jank: (", String(ns.c_str()), "/", fn, " self) - [",
                                  jank::error::kind_str(e->kind), "] ",
                                  String(jtl::immutable_string(e->message).c_str()));
     } catch (std::exception const &e) {
       UtilityFunctions::printerr("jank: (", String(ns.c_str()), "/", fn,
-                                 " self) — C++ exception: ", e.what());
+                                 " self) - C++ exception: ", e.what());
     } catch (...) {
       UtilityFunctions::printerr("jank: (", String(ns.c_str()), "/", fn,
-                                 " self) — unknown C++ exception.");
+                                 " self) - unknown C++ exception");
     }
   });
 }
@@ -483,7 +483,7 @@ void start_nrepl() {
 void shutdown_jank() {
   static std::atomic<bool> done{ false };
   if (done.exchange(true)) { return; }
-  UtilityFunctions::print("jank: clean shutdown.");
+  UtilityFunctions::print("jank: clean shutdown");
   std::error_code ec;
   fs::remove(".nrepl-port", ec);
 }
@@ -588,9 +588,9 @@ void JankRuntime::_ready() {
 
   if (repl_enabled()) {
     start_nrepl();
-    UtilityFunctions::print("jank: runtime host up — nREPL enabled.");
+    UtilityFunctions::print("jank: runtime host up - nREPL enabled");
   } else {
-    UtilityFunctions::print("jank: runtime host up — REPL disabled.");
+    UtilityFunctions::print("jank: runtime host up - REPL disabled");
   }
 }
 

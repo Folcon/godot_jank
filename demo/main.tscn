@@ -17,3 +17,11 @@ jank_script = "res://mover_b.jank"
 [node name="BoxB" type="Polygon2D" parent="MoverB"]
 polygon = PackedVector2Array(0, 0, 48, 0, 48, 48, 0, 48)
 color = Color(0.3, 0.7, 1, 1)
+
+[node name="MoverC" type="JankNode" parent="."]
+jank_ns = "mover-c"
+jank_script = "res://mover_c.cljc"
+
+[node name="BoxC" type="Polygon2D" parent="MoverC"]
+polygon = PackedVector2Array(0, 0, 48, 0, 48, 48, 0, 48)
+color = Color(1, 0.7, 0.3, 1)

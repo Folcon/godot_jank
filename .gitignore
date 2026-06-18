@@ -10,3 +10,14 @@ demo/addons/godot_jank/bin/*.dll
 # godot
 demo/.godot/
 .DS_Store
+
+# idea
+.idea/
+*.iml
+
+# local setup
+scripts/
+
+# jank nREPL port (written at runtime)
+.nrepl-port
+demo/.nrepl-port

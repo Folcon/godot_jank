@@ -1,4 +1,5 @@
-(in-ns 'mover-c)
+(ns mover-c
+  (:require [godot]))
 
 (defn process [self delta]
   (let [x (godot/get-x self "position")]

@@ -84,6 +84,11 @@ extern "C" {
     double gd_get_vec2y(long node, char const *prop);  // read .y of a Vector2 property
 }
 
+// No-op module loader for `godot`: the bridge ns is loaded eagerly in setup_godot_ns,
+//   so this never actually runs — it just gives jank_module_register a valid load-fn so
+//   that (require 'godot) in user scripts short-circuits as already-loaded.
+extern "C" void jank_load_godot_noop() {}
+
 namespace {
 
 // ---- VM state ----
@@ -363,44 +368,24 @@ void setup_godot_ns() {
   ev(R"JANK((cpp/raw "extern \"C\" double jank_t_get_vec2x(long fp,long n,const char* p){ return reinterpret_cast<double(*)(long,const char*)>(fp)(n,p); }"))JANK");
   ev(R"JANK((cpp/raw "extern \"C\" double jank_t_get_vec2y(long fp,long n,const char* p){ return reinterpret_cast<double(*)(long,const char*)>(fp)(n,p); }"))JANK");
 
-  // Public helpers user scripts call, Writes:
-  ev("(clojure.core/defn set-num [self prop v] "
-     "(cpp/jank_t_set_num set-num-fp self (cpp/cast (:* (:const char)) prop) "
-     "(clojure.core/double v)))");
-  ev("(clojure.core/defn set-vec2 [self prop x y] "
-     "(cpp/jank_t_set_vec2 set-vec2-fp self (cpp/cast (:* (:const char)) prop) "
-     "(clojure.core/double x) (clojure.core/double y)))");
-  ev("(clojure.core/defn set-color [self prop r g b a] "
-     "(cpp/jank_t_set_color set-color-fp self (cpp/cast (:* (:const char)) prop) "
-     "(clojure.core/double r) (clojure.core/double g) "
-     "(clojure.core/double b) (clojure.core/double a)))");
-  ev("(clojure.core/defn call [self method] "
-     "(cpp/jank_t_call0 call0-fp self (cpp/cast (:* (:const char)) method)))");
-  ev("(clojure.core/defn call-num [self method v] "
-     "(cpp/jank_t_call_num call-num-fp self (cpp/cast (:* (:const char)) method) "
-     "(clojure.core/double v)))");
-  // Reads (synchronous on main thread)
-  // Coerce the cpp double return to a jank real with (double …): a raw cpp primitive works in
-  //   numeric contexts but isn't a fully boxed jank value, so e.g. (println (get-x …)) would
-  //   otherwise throw
-  ev("(clojure.core/defn get-num [self prop] "
-     "(clojure.core/double "
-     "(cpp/jank_t_get_num get-num-fp self (cpp/cast (:* (:const char)) prop))))");
-  ev("(clojure.core/defn get-x [self prop] "
-     "(clojure.core/double "
-     "(cpp/jank_t_get_vec2x get-vec2x-fp self (cpp/cast (:* (:const char)) prop))))");
-  ev("(clojure.core/defn get-y [self prop] "
-     "(clojure.core/double "
-     "(cpp/jank_t_get_vec2y get-vec2y-fp self (cpp/cast (:* (:const char)) prop))))");
-
-  // Convenience wrappers on the generic ops.
-  ev("(clojure.core/defn set-position [self x y] (set-vec2 self \"position\" x y))");
-  ev("(clojure.core/defn set-rotation [self r] (set-num self \"rotation\" r))");
-  ev("(clojure.core/defn set-scale [self x y] (set-vec2 self \"scale\" x y))");
-  ev("(clojure.core/defn set-modulate [self r g b a] "
-     "(set-color self \"modulate\" r g b a))");
-  UtilityFunctions::print("jank: godot bridge ns ready "
-                          "(set-num/vec2/color, call, get-num/x/y + wrappers).");
+  // Public helpers + wrappers now live in res://godot.jank, readable jank source the IDE can resolve
+  // The address-binding + trampolines above stay in C++ (addresses are runtime-only, trampolines must
+  //   be registered before this file uses them)
+  // NOTE: jank_read_string_c reads ONE form, so wrap the multi-form file in (do …)
+  {
+    Ref<FileAccess> f{ FileAccess::open("res://godot.jank", FileAccess::READ) };
+    if (f.is_valid()) {
+      std::string const body{ f->get_as_text().utf8().get_data() };
+      jank_eval(jank_read_string_c(("(do\n" + body + "\n)").c_str()));
+    } else {
+      UtilityFunctions::printerr("jank: res://godot.jank not found - bridge helpers missing.");
+    }
+  }
+  // Mark `godot` as a loaded module so user scripts can (:require [godot]), a satisfied
+  //   no-op at runtime that gives the IDE a real namespace to resolve godot/* against
+  jank_module_register("godot", &jank_load_godot_noop);
+  jank_module_set_loaded("godot");
+  UtilityFunctions::print("jank: godot bridge ns ready (loaded res://godot.jank).");
 }
 
 // Boot the VM once, on the main thread

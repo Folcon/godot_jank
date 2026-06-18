@@ -1,6 +1,11 @@
 ;; ns mover-a - synchronous read-modify-write. No jank-side state for the position:
 ;; it lives in the Godot node, read back each frame with (godot/get-x ...), modified
 ;; and written. Only possible because jank runs on Godot's main thread.
+;; (:require [godot]) is a no-op at runtime (the bridge is preloaded) but lets the IDE
+;; resolve godot/*.
+(ns mover-a
+  (:require [godot]))
+
 (defn process [self delta]
   (let [x (godot/get-x self "position")]
     (godot/set-position self (if (>= x 700.0) 0.0 (+ x 4.0)) 160)))
